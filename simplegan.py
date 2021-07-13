@@ -47,9 +47,6 @@ class SimpleGan:
         fake = np.zeros((self.batch_size, 1))
 
         for epoch in range(epochs):
-            # ---------------------
-            #  Train Discriminator
-            # ---------------------
             batch_data = np.reshape(data.sample(n=self.batch_size).values, (self.batch_size, -1))
             noise = tf.random.normal((self.batch_size, self.noise_dim))
 
