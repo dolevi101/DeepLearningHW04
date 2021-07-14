@@ -2,9 +2,9 @@ import numpy as np
 import pandas as pd
 from scipy.io import arff
 
-from simplegan import SimpleGan
+from complex_gan import ComplexGAN
 
-model = SimpleGan
+model = ComplexGAN
 
 # Read the original data and have it preprocessed
 
@@ -15,13 +15,13 @@ data_cols = list(data.columns[data.columns != 'class'])
 label_cols = ['class']
 
 # Define the GAN and training parameters
-noise_dim = 64
+noise_dim = 32
 layer_dim = 512
 batch_size = 32
 
 log_step = 100
 epochs = 1000 + 1
-learning_rate = 5e-4
+learning_rate = 1e-5
 models_dir = 'weight_cache'
 
 train_sample = data.copy().reset_index(drop=True)
@@ -31,7 +31,7 @@ data_cols = [i for i in train_sample.columns if i not in label_cols]
 
 
 # Training the GAN model chosen: Vanilla GAN, CGAN, DCGAN, etc.
-synthesizer = SimpleGan(batch_size=batch_size, learning_rate=learning_rate, noise_dim=noise_dim, data_shape=train_sample.shape, layers_dim=layer_dim)
+synthesizer = ComplexGAN(batch_size=batch_size, learning_rate=learning_rate, noise_dim=noise_dim, data_shape=train_sample.shape, layers_dim=layer_dim)
 synthesizer.train(train_sample, epochs)
 
 gen_model = synthesizer.generator
