@@ -70,13 +70,16 @@ class SimpleGan:
                 noise = tf.random.normal((self.batch_size, self.noise_dim))
                 generator_loss = self.combined_model.train_on_batch(noise, valid)
 
-            print("%d [Disc loss: %f, acc.: %.2f%%] [Gen loss: %f]" % (
-                epoch, dis_loss[0], 100 * dis_loss[1], generator_loss))
+            print(f'Epoch: {epoch}  [Disc loss: {format(dis_loss[0], ".3f")}, acc: {format(dis_loss[1], ".3f")}]  '
+                  f'[Gen loss: {format(generator_loss, ".3f")}]')
 
             loss_df = loss_df.append({'epoch': epoch,
                                       'disc_loss': dis_loss[0],
                                       'disc_metric': dis_loss[1],
                                       'gen_loss': generator_loss}, ignore_index=True)
+
+        toc = time.perf_counter()
+        print(f'run time (seconds): {toc-tic}')
 
         if not path.exists(save_dir):
             os.mkdir(save_dir)

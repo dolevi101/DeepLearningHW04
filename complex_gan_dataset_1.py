@@ -25,7 +25,7 @@ scaled_data = pd.get_dummies(scaled_data, prefix="binary", columns=binary_col, d
 noise_dim = 32
 layer_dim = 512
 batch_size = 32
-epochs = 1 + 200
+epochs = 1  # + 200
 learning_rate = 1e-5
 save_dir = 'weight_cache_complex_dataset1'
 
@@ -38,14 +38,25 @@ complex_gan = ComplexGAN(batch_size=batch_size,
 complex_gan.train(scaled_data, epochs, save_dir)
 
 # Predicting
-gen_model = complex_gan.generator
-noise = np.random.normal(size=(100, noise_dim))
-c_gen = np.random.uniform(0, 1, size=(100, 1))
+## A
+black_box_test_results = complex_gan.black_box_model.predict_proba(complex_gan.X_test_black_box)[:, 1]
+np.save(f'./{save_dir}/black_box_test_results.npy', np.array(black_box_test_results))
 
+## B+C
+gen_model = complex_gan.generator
+noise = np.random.normal(size=(1000, noise_dim))
+c_gen = np.random.uniform(0, 1, size=(1000, 1))
 df_generated_data = pd.DataFrame(complex_gan.generator.predict((noise, c_gen)), columns=scaled_data.columns)
 bb_probabilities = complex_gan.black_box_model.predict_proba(
     df_generated_data.iloc[:, 0:df_generated_data.shape[1] - 1])[:, 1]
+
+df_generated_data.to_csv(f'./{save_dir}/df_generated_data_for_B-C.csv')
+np.save(f'./{save_dir}/black_box_generated_data_results.npy', np.array(bb_probabilities))
+
+## D
 predict_generated_data = complex_gan.discriminator.predict([df_generated_data, c_gen, bb_probabilities])
+np.save(f'./{save_dir}/discriminator_generated_data_results.npy', np.array(predict_generated_data))
+
 print(f"We faked {sum(predict_generated_data > 0.5)} out of 100")
 df_generated_data[num_col] = data_transformer.inverse_transform(df_generated_data[num_col])
 print(df_generated_data.head(20))

@@ -1,4 +1,5 @@
 import os
+import pickle
 import time
 from os import path
 
@@ -84,8 +85,8 @@ class ComplexGAN:
             input_data = [noise, c_gen]
             generator_loss = self.generator.train_on_batch(input_data, valid)
 
-            print("%d [Disc loss: %f, acc.: %.2f%%] [Gen loss: %f]" % (
-                epoch, dis_loss[0], 100 * dis_loss[1], generator_loss[0]))
+            print(f'Epoch: {epoch}  [Disc loss: {format(dis_loss[0], ".3f")}, acc: {format(dis_loss[1], ".3f")}]  '
+                  f'[Gen loss: {format(generator_loss[0], ".3f")}]')
 
             loss_df = loss_df.append({'epoch': epoch,
                                       'disc_loss': dis_loss[0],
@@ -94,7 +95,7 @@ class ComplexGAN:
                                       'gen_metric': generator_loss[1]}, ignore_index=True)
 
         toc = time.perf_counter()
-        print(toc-tic)
+        print(f'run time (seconds): {toc-tic}')
 
         if not path.exists(save_dir):
             os.mkdir(save_dir)
@@ -102,7 +103,12 @@ class ComplexGAN:
         h5_name = f'./{save_dir}/' + '_{}_model_weights.h5'
         self.generator.save_weights(h5_name.format('generator'))
         self.discriminator.save_weights(h5_name.format('discriminator'))
+        self.train_black_box.to_csv(f'./{save_dir}/train_data_black_box.csv')
+        self.test_black_box.to_csv(f'./{save_dir}/test_data_black_box.csv')
         loss_df.to_csv(f'./{save_dir}/loss.csv')
+
+        with open(f'./{save_dir}/black_box_RF_model.model', 'wb') as f:
+            pickle.dump(self.black_box_model, f)
 
     def _train_black_box_model(self, data: pd.DataFrame):
         self.black_box_model = RandomForestClassifier(random_state=1, **RANDOM_FOREST_PARAMS)
