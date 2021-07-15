@@ -1,7 +1,9 @@
 import os
+import time
 from os import path
 
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.layers import Input, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
@@ -13,6 +15,7 @@ class SimpleGan:
     """
     A Simple Gan Implementation
     """
+
     def __init__(self, batch_size, learning_rate, noise_dim, data_shape, layers_dim):
         self.learning_rate = learning_rate
         self.noise_dim = noise_dim
@@ -39,10 +42,14 @@ class SimpleGan:
                                             discriminator=self.discriminator)
         self.combined_model.compile(loss=LOSS, optimizer=self.optimizer)
 
-    def train(self, data, epochs):
+    def train(self, data, epochs, save_dir=None):
         """
         Train the GAN
         """
+        tic = time.perf_counter()
+
+        loss_df = pd.DataFrame(columns=['epoch', 'disc_loss', 'disc_metric', 'gen_loss', 'gen_metric'])
+
         valid = np.ones((self.batch_size, 1))
         fake = np.zeros((self.batch_size, 1))
 
@@ -66,18 +73,25 @@ class SimpleGan:
             print("%d [Disc loss: %f, acc.: %.2f%%] [Gen loss: %f]" % (
                 epoch, dis_loss[0], 100 * dis_loss[1], generator_loss))
 
-        if not path.exists('weight_cache'):
-            os.mkdir('weight_cache')
+            loss_df = loss_df.append({'epoch': epoch,
+                                      'disc_loss': dis_loss[0],
+                                      'disc_metric': dis_loss[1],
+                                      'gen_loss': generator_loss}, ignore_index=True)
 
-        h5_name = './weight_cache/' + '_{}_model_weights.h5'
+        if not path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        h5_name = f'./{save_dir}/' + '_{}_model_weights.h5'
         self.generator.save_weights(h5_name.format('generator'))
         self.discriminator.save_weights(h5_name.format('discriminator'))
+        loss_df.to_csv(f'./{save_dir}/loss.csv')
 
 
 class Generator(tf.keras.Model):
     """
     The Generator Model Class
     """
+
     def __init__(self, data_size, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.data_size = data_size
@@ -95,6 +109,7 @@ class Discriminator(tf.keras.Model):
     """
     The Discriminator Model Class
     """
+
     def __init__(self, data_size, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.data_size = data_size
@@ -114,6 +129,7 @@ class CombinedModel(tf.keras.Model):
     """
     The Combined Model
     """
+
     def __init__(self, input, generator, discriminator):
         record = generator(input)
         discriminator.trainable = False

@@ -25,10 +25,9 @@ scaled_data = pd.get_dummies(scaled_data, prefix="binary", columns=binary_col, d
 noise_dim = 64
 layer_dim = 512
 batch_size = 32
-log_step = 100
-epochs = 1000 + 1
+epochs = 1# + 1000
 learning_rate = 5e-4
-models_dir = 'weight_cache_simple_dataset1'
+models_dir = 'weight_cache_simple_dataset2'
 
 # Training the GAN model chosen: Vanilla GAN, CGAN, DCGAN, etc.
 simple_gan = SimpleGan(batch_size=batch_size,
@@ -36,7 +35,7 @@ simple_gan = SimpleGan(batch_size=batch_size,
                          noise_dim=noise_dim,
                          data_shape=scaled_data.shape,
                          layers_dim=layer_dim)
-simple_gan.train(scaled_data, epochs)
+simple_gan.train(scaled_data, epochs, models_dir)
 
 gen_model = simple_gan.generator
 df_generated_data = pd.DataFrame(simple_gan.generator.predict(np.random.normal(size=(1000, noise_dim))),

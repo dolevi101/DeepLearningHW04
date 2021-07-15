@@ -25,8 +25,7 @@ scaled_data = pd.get_dummies(scaled_data, prefix="binary", columns=binary_col, d
 noise_dim = 32
 layer_dim = 512
 batch_size = 32
-log_step = 100
-epochs = 200 + 1
+epochs = 1 + 200
 learning_rate = 1e-5
 models_dir = 'weight_cache_complex_dataset2'
 
@@ -36,7 +35,7 @@ complex_gan = ComplexGAN(batch_size=batch_size,
                          noise_dim=noise_dim,
                          data_shape=scaled_data.shape,
                          layers_dim=layer_dim)
-complex_gan.train(scaled_data, epochs)
+complex_gan.train(scaled_data, epochs, models_dir)
 
 # Predicting
 gen_model = complex_gan.generator
