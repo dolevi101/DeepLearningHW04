@@ -70,7 +70,7 @@ class SimpleGan:
                 noise = tf.random.normal((self.batch_size, self.noise_dim))
                 generator_loss = self.combined_model.train_on_batch(noise, valid)
 
-            print(f'Epoch: {epoch}  [Disc loss: {format(dis_loss[0], ".3f")}, acc: {format(dis_loss[1], ".3f")}]  '
+            print(f'Epoch: {epoch}  [Disc loss: {format(dis_loss[0], ".3f")}, acc: {format(dis_loss[1]*100, ".3f")}]  '
                   f'[Gen loss: {format(generator_loss, ".3f")}]')
 
             loss_df = loss_df.append({'epoch': epoch,

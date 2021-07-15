@@ -24,9 +24,9 @@ scaled_data = pd.get_dummies(scaled_data, prefix="binary", columns=binary_col, d
 # Define the GAN and training parameters
 noise_dim = 64
 layer_dim = 512
-batch_size = 32
-epochs = 1 + 1000
-learning_rate = 5e-4
+batch_size = 64
+epochs = 1 + 199
+learning_rate = 1e-4
 save_dir = 'weight_cache_simple_dataset1'
 
 # Training the GAN model chosen: Vanilla GAN, CGAN, DCGAN, etc.

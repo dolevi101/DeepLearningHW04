@@ -85,8 +85,9 @@ class ComplexGAN:
             input_data = [noise, c_gen]
             generator_loss = self.generator.train_on_batch(input_data, valid)
 
-            print(f'Epoch: {epoch}  [Disc loss: {format(dis_loss[0], ".3f")}, acc: {format(dis_loss[1], ".3f")}]  '
-                  f'[Gen loss: {format(generator_loss[0], ".3f")}]')
+            print(
+                f'Epoch: {epoch}  [Disc loss: {format(dis_loss[0], ".3f")}, acc: {format(dis_loss[1] * 100, ".3f")}]  '
+                f'[Gen loss: {format(generator_loss[0], ".3f")}]')
 
             loss_df = loss_df.append({'epoch': epoch,
                                       'disc_loss': dis_loss[0],
@@ -95,7 +96,7 @@ class ComplexGAN:
                                       'gen_metric': generator_loss[1]}, ignore_index=True)
 
         toc = time.perf_counter()
-        print(f'run time (seconds): {toc-tic}')
+        print(f'run time (seconds): {toc - tic}')
 
         if not path.exists(save_dir):
             os.mkdir(save_dir)

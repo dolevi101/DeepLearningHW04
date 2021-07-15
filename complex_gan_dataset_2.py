@@ -22,9 +22,9 @@ scaled_data[num_col] = data_transformer.fit_transform(scaled_data[num_col])
 scaled_data = pd.get_dummies(scaled_data, prefix="binary", columns=binary_col, drop_first=True)
 
 # Parameters
-noise_dim = 32
+noise_dim = 64
 layer_dim = 512
-batch_size = 32
+batch_size = 64
 epochs = 1 + 200
 learning_rate = 1e-5
 save_dir = 'weight_cache_complex_dataset2'
