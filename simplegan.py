@@ -56,7 +56,7 @@ class SimpleGan:
             # Train discriminator
             dis_loss_real_data = self.discriminator.train_on_batch(batch_data, valid)
             dis_loss_fake_data = self.discriminator.train_on_batch(generated_data, fake)
-            dis_loss = np.average(dis_loss_real_data, dis_loss_fake_data)
+            dis_loss = np.add(dis_loss_real_data, dis_loss_fake_data) * 0.5
 
             # Train generator
             for i in range(5):
