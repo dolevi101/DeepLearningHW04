@@ -25,7 +25,7 @@ scaled_data = pd.get_dummies(scaled_data, prefix="binary", columns=binary_col, d
 noise_dim = 64
 layer_dim = 512
 batch_size = 32
-epochs = 1# + 1000
+epochs = 1 + 1000
 learning_rate = 5e-4
 models_dir = 'weight_cache_simple_dataset2'
 
