@@ -1,10 +1,12 @@
 import os
+import pickle
+import time
 from os import path
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
-from keras.layers import Concatenate, ReLU
+from keras.layers import Concatenate
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.layers import Input, Dense, Dropout
@@ -36,8 +38,8 @@ class ComplexGAN:
         self.optimizer = Adam(self.learning_rate)
 
         self.generator = Generator(self.batch_size).build_model(input_shape=(self.noise_dim,),
-                                                               dim=self.layers_dim,
-                                                               data_dim=self.data_y_shape)
+                                                                dim=self.layers_dim,
+                                                                data_dim=self.data_y_shape)
         self.generator.compile(loss=LOSS,
                                optimizer=self.optimizer,
                                metrics=['accuracy'])
@@ -48,10 +50,13 @@ class ComplexGAN:
                                    optimizer=self.optimizer,
                                    metrics=['accuracy'])
 
-    def train(self, data, epochs):
+    def train(self, data, epochs, save_dir=None):
         """
         Train the GAN
         """
+        tic = time.perf_counter()
+
+        loss_df = pd.DataFrame(columns=['epoch', 'disc_loss', 'disc_metric', 'gen_loss', 'gen_metric'])
         self._train_black_box_model(data)
 
         valid = np.ones((self.batch_size, 1))
@@ -72,7 +77,7 @@ class ComplexGAN:
             # Train discriminator
             dis_loss_real_data = self.discriminator.train_on_batch((batch_data, fake_c_gen, valid), valid)
             dis_loss_fake_data = self.discriminator.train_on_batch((batch_data, c_gen, c_bb), fake)
-            dis_loss = np.add(dis_loss_fake_data,dis_loss_real_data) * 0.5
+            dis_loss = np.add(dis_loss_fake_data, dis_loss_real_data) * 0.5
 
             # Train generator
             noise = tf.random.normal((self.batch_size, self.noise_dim))
@@ -80,15 +85,31 @@ class ComplexGAN:
             input_data = [noise, c_gen]
             generator_loss = self.generator.train_on_batch(input_data, valid)
 
-            print("%d [Disc loss: %f, acc.: %.2f%%] [Gen loss: %f]" % (
-                epoch, dis_loss[0], 100 * dis_loss[1], generator_loss[0]))
+            print(
+                f'Epoch: {epoch}  [Disc loss: {format(dis_loss[0], ".3f")}, acc: {format(dis_loss[1] * 100, ".3f")}]  '
+                f'[Gen loss: {format(generator_loss[0], ".3f")}]')
 
-        if not path.exists('weight_cache'):
-            os.mkdir('weight_cache')
+            loss_df = loss_df.append({'epoch': epoch,
+                                      'disc_loss': dis_loss[0],
+                                      'disc_metric': dis_loss[1],
+                                      'gen_loss': generator_loss[0],
+                                      'gen_metric': generator_loss[1]}, ignore_index=True)
 
-        h5_name = './weight_cache/' + '_{}_model_weights.h5'
+        toc = time.perf_counter()
+        print(f'run time (seconds): {toc - tic}')
+
+        if not path.exists(save_dir):
+            os.mkdir(save_dir)
+
+        h5_name = f'./{save_dir}/' + '_{}_model_weights.h5'
         self.generator.save_weights(h5_name.format('generator'))
         self.discriminator.save_weights(h5_name.format('discriminator'))
+        self.train_black_box.to_csv(f'./{save_dir}/train_data_black_box.csv')
+        self.test_black_box.to_csv(f'./{save_dir}/test_data_black_box.csv')
+        loss_df.to_csv(f'./{save_dir}/loss.csv')
+
+        with open(f'./{save_dir}/black_box_RF_model.model', 'wb') as f:
+            pickle.dump(self.black_box_model, f)
 
     def _train_black_box_model(self, data: pd.DataFrame):
         self.black_box_model = RandomForestClassifier(random_state=1, **RANDOM_FOREST_PARAMS)
@@ -109,7 +130,7 @@ class Generator(tf.keras.Model):
     The Generator Model Class
     """
 
-    def __init__(self, data_size = None, *args,
+    def __init__(self, data_size=None, *args,
                  **kwargs):
         super().__init__(*args, **kwargs)
         self.data_size = data_size
@@ -125,7 +146,6 @@ class Generator(tf.keras.Model):
         concat = Concatenate()([x, input_2])
         x = Dense(data_dim)(concat)
         return tf.keras.Model(inputs=[input_1, input_2], outputs=x)
-
 
 
 class Discriminator(tf.keras.Model):

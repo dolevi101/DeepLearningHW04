@@ -24,24 +24,28 @@ scaled_data = pd.get_dummies(scaled_data, prefix="binary", columns=binary_col, d
 # Define the GAN and training parameters
 noise_dim = 64
 layer_dim = 512
-batch_size = 32
-log_step = 100
-epochs = 1000 + 1
-learning_rate = 5e-4
-models_dir = 'weight_cache_simple_dataset1'
+batch_size = 64
+epochs = 1 + 199
+learning_rate = 1e-4
+save_dir = 'weight_cache_simple_dataset1'
 
 # Training the GAN model chosen: Vanilla GAN, CGAN, DCGAN, etc.
 simple_gan = SimpleGan(batch_size=batch_size,
-                         learning_rate=learning_rate,
-                         noise_dim=noise_dim,
-                         data_shape=scaled_data.shape,
-                         layers_dim=layer_dim)
-simple_gan.train(scaled_data, epochs)
+                       learning_rate=learning_rate,
+                       noise_dim=noise_dim,
+                       data_shape=scaled_data.shape,
+                       layers_dim=layer_dim)
+simple_gan.train(scaled_data, epochs, save_dir)
 
 gen_model = simple_gan.generator
-df_generated_data = pd.DataFrame(simple_gan.generator.predict(np.random.normal(size=(1000, noise_dim))),
+df_generated_data = pd.DataFrame(simple_gan.generator.predict(np.random.normal(size=(100, noise_dim))),
                                  columns=scaled_data.columns)
+df_generated_data.to_csv(f'./{save_dir}/df_generated_data_scaled.csv')
+
 predict_generated_data = simple_gan.discriminator.predict([df_generated_data])
-print(f"We faked {sum(predict_generated_data > 0.5)} out of 1000")
+np.save(f'./{save_dir}/predict_generated_data.npy', np.array(predict_generated_data))
+
+print(f"We faked {sum(predict_generated_data > 0.5)} out of 100")
 df_generated_data[num_col] = data_transformer.inverse_transform(df_generated_data[num_col])
+df_generated_data.to_csv(f'./{save_dir}/df_generated_data.csv')
 print(df_generated_data.head(20))

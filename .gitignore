@@ -1,3 +1,5 @@
 Pipfile
 Pipfile.lock
 weight_cache/*
+weight_cache*/*
+results
